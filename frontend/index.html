@@ -221,6 +221,7 @@
         <input type="text" id="nik" placeholder="16 digit NIK">
       </div>
     </div>
+
     <div class="form-row">
       <div class="form-group">
         <label>No. HP</label>
@@ -237,62 +238,45 @@
         </select>
       </div>
     </div>
+
     <div class="form-group">
       <label>Keperluan / Keterangan</label>
       <textarea id="keperluan" placeholder="Jelaskan keperluan pengajuan..."></textarea>
     </div>
+
     <div class="form-group">
-      <label>Upload Dokumen Pendukung (KTP, KK, dll)</label>
+      <label>Upload Dokumen Pendukung</label>
       <div class="upload-area" onclick="document.getElementById('file-input').click()">
         <div class="icon">📎</div>
         <strong id="file-label" style="font-size:0.9rem">Klik untuk pilih file</strong>
         <p>Format: JPG, PNG, PDF — Maks 5MB</p>
-        <input type="file" id="file-input" style="display:none" accept=".jpg,.jpeg,.png,.pdf" onchange="gantiFile(this)">
+        <input type="file" id="file-input" style="display:none"
+          accept=".jpg,.jpeg,.png,.pdf"
+          onchange="gantiFile(this)">
       </div>
     </div>
+
     <button class="btn-submit" onclick="kirimForm()">Kirim Pengajuan</button>
+
+    <!-- ALERT SUKSES -->
     <div class="alert alert-success" id="alert-sukses">
-      ✅ Pengajuan berhasil dikirim! Nomor tiket kamu: <strong id="nomor-tiket"></strong> — simpan untuk cek status.
+      <p>✅ Pengajuan berhasil dikirim!</p>
+      <p>Nomor tiket: <strong id="nomor-tiket"></strong></p>
+      <p>File berhasil tersimpan di cloud storage.</p>
+      <p>
+        Bukti file:
+        <a id="file-link" href="#" target="_blank">Lihat File Upload</a>
+      </p>
     </div>
   </div>
 </div>
-
-<!-- TRACKING -->
-<div class="section" id="tracking">
-  <div class="section-title">Cek Status Pengajuan</div>
-  <div class="section-sub">Masukkan nomor tiket yang kamu terima</div>
-  <div class="track-box">
-    <div class="track-input">
-      <input type="text" id="input-tiket" placeholder="Contoh: SPD-2024-00123">
-      <button class="btn-cek" onclick="cekStatus()">Cek</button>
-    </div>
-    <div id="status-result" class="status-result">
-      <div style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border);">
-        <p style="font-size:0.85rem; color:var(--teks2)">Jenis Layanan</p>
-        <p style="font-weight:600; margin-top:2px" id="res-jenis">—</p>
-      </div>
-      <div class="status-steps" id="status-steps"></div>
-    </div>
-    <div id="no-data" class="no-data" style="display:none">
-      Nomor tiket tidak ditemukan. Pastikan penulisan sudah benar.
-    </div>
-  </div>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <p><strong>SiPelDes</strong> — Sistem Pelayanan Desa Digital</p>
-  <p style="margin-top:4px">Kelurahan Sukamaju | Telp: (022) 1234-5678</p>
-</footer>
 
 <script>
-  // Pilih layanan dari card
   function pilihLayanan(nama) {
     document.getElementById('jenis').value = nama;
     document.getElementById('ajukan').scrollIntoView({ behavior: 'smooth' });
   }
 
-  // Ganti nama file setelah dipilih
   function gantiFile(input) {
     const label = document.getElementById('file-label');
     if (input.files.length > 0) {
@@ -300,18 +284,17 @@
     }
   }
 
-  // Kirim form (simulasi, seharusnya POST ke /api/surat)
-async function kirimForm() {
-    const nama      = document.getElementById('nama').value.trim();
-    const nik       = document.getElementById('nik').value.trim();
-    const no_hp     = document.getElementById('hp').value.trim();
-    const jenis     = document.getElementById('jenis').value;
+  async function kirimForm() {
+    const nama = document.getElementById('nama').value.trim();
+    const nik = document.getElementById('nik').value.trim();
+    const no_hp = document.getElementById('hp').value.trim();
+    const jenis = document.getElementById('jenis').value;
     const keperluan = document.getElementById('keperluan').value.trim();
-    const file      = document.getElementById('file-input').files[0];
+    const file = document.getElementById('file-input').files[0];
 
-    if (!nama || !nik || !jenis) {
-        alert('Lengkapi Nama, NIK, dan Jenis Layanan terlebih dahulu.');
-        return;
+    if (!nama || !nik || !jenis || !file) {
+      alert('Lengkapi semua data dan upload file terlebih dahulu.');
+      return;
     }
 
     const formData = new FormData();
@@ -320,76 +303,32 @@ async function kirimForm() {
     formData.append('no_hp', no_hp);
     formData.append('jenis', jenis);
     formData.append('keperluan', keperluan);
-    if (file) formData.append('file', file);
+    formData.append('file', file);
 
     try {
-        const res = await fetch('/api/surat/', {
-            method: 'POST',
-            body: formData
+      const res = await fetch('/api/surat/', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('nomor-tiket').textContent = data.tiket;
+
+        // tampilkan link file dari S3
+        document.getElementById('file-link').href = data.file_url;
+
+        document.getElementById('alert-sukses').classList.add('show');
+        document.getElementById('alert-sukses').scrollIntoView({
+          behavior: 'smooth'
         });
-        const data = await res.json();
-
-        if (res.ok) {
-            document.getElementById('nomor-tiket').textContent = data.tiket;
-            document.getElementById('alert-sukses').classList.add('show');
-            document.getElementById('alert-sukses').scrollIntoView({ behavior: 'smooth' });
-        } else {
-            alert('Error: ' + data.error);
-        }
-    } catch (err) {
-        alert('Gagal kirim, coba lagi!');
-    }
-}
-
-  // Cek status pengajuan
-  async function cekStatus() {
-    const tiket  = document.getElementById('input-tiket').value.trim().toUpperCase();
-    const res    = document.getElementById('status-result');
-    const nodata = document.getElementById('no-data');
-
-    res.classList.remove('show');
-    nodata.style.display = 'none';
-
-    try {
-        const response = await fetch(`/api/surat/status/${tiket}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-            nodata.style.display = 'block';
-            return;
-        }
-
-        document.getElementById('res-jenis').textContent = data.jenis + ' — ' + data.nama;
-
-        const steps = [
-            { label: 'Pengajuan Diterima',  sub: data.tgl,   status: 'done'   },
-            { label: 'Sedang Diverifikasi', sub: 'Petugas kelurahan', status: data.status === 'Diproses' ? 'active' : data.status === 'Diterima' ? 'active' : 'done' },
-            { label: 'Ditandatangani',      sub: 'Menunggu', status: data.status === 'Selesai' ? 'done' : '' },
-            { label: 'Surat Siap Diambil',  sub: 'Menunggu', status: data.status === 'Selesai' ? 'done' : '' },
-        ];
-
-        const container = document.getElementById('status-steps');
-        container.innerHTML = '';
-        steps.forEach((s, i) => {
-            const isLast = i === steps.length - 1;
-            container.innerHTML += `
-                <div class="step">
-                    <div class="step-line">
-                        <div class="step-dot ${s.status}"></div>
-                        ${!isLast ? `<div class="step-connector ${s.status === 'done' ? 'done' : ''}"></div>` : ''}
-                    </div>
-                    <div class="step-info" style="padding-bottom: ${isLast ? 0 : '1rem'}">
-                        <h4>${s.label}</h4>
-                        <p>${s.sub}</p>
-                    </div>
-                </div>`;
-        });
-        res.classList.add('show');
+      } else {
+        alert('Upload gagal: ' + data.error);
+      }
 
     } catch (err) {
-        nodata.style.display = 'block';
+      alert('Terjadi kesalahan saat upload file');
     }
-}
+  }
 </script>
-</body>
-</html>
