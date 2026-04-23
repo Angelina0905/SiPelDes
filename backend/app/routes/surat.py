@@ -18,6 +18,11 @@ def create_surat():
         if file:
             file_url = upload_file(file, folder="surat")
 
+            if not file_url:
+                return jsonify({
+                    "error": "Upload file ke S3 gagal"
+                }), 500
+
         tiket = "SPD-2026-001"
 
         return jsonify({
