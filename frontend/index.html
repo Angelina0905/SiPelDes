@@ -301,65 +301,95 @@
   }
 
   // Kirim form (simulasi, seharusnya POST ke /api/surat)
-  function kirimForm() {
-    const nama = document.getElementById('nama').value.trim();
-    const nik  = document.getElementById('nik').value.trim();
-    const jenis = document.getElementById('jenis').value;
+async function kirimForm() {
+    const nama      = document.getElementById('nama').value.trim();
+    const nik       = document.getElementById('nik').value.trim();
+    const no_hp     = document.getElementById('hp').value.trim();
+    const jenis     = document.getElementById('jenis').value;
+    const keperluan = document.getElementById('keperluan').value.trim();
+    const file      = document.getElementById('file-input').files[0];
+
     if (!nama || !nik || !jenis) {
-      alert('Lengkapi Nama, NIK, dan Jenis Layanan terlebih dahulu.');
-      return;
+        alert('Lengkapi Nama, NIK, dan Jenis Layanan terlebih dahulu.');
+        return;
     }
-    // Simulasi nomor tiket
-    const tiket = 'SPD-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*90000)+10000);
-    document.getElementById('nomor-tiket').textContent = tiket;
-    document.getElementById('alert-sukses').classList.add('show');
-    // Simpan ke localStorage untuk simulasi tracking
-    const data = { tiket, jenis, nama, tgl: new Date().toLocaleDateString('id-ID') };
-    localStorage.setItem(tiket, JSON.stringify(data));
-    // Scroll ke alert
-    document.getElementById('alert-sukses').scrollIntoView({ behavior: 'smooth' });
-  }
+
+    const formData = new FormData();
+    formData.append('nama', nama);
+    formData.append('nik', nik);
+    formData.append('no_hp', no_hp);
+    formData.append('jenis', jenis);
+    formData.append('keperluan', keperluan);
+    if (file) formData.append('file', file);
+
+    try {
+        const res = await fetch('/api/surat/', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            document.getElementById('nomor-tiket').textContent = data.tiket;
+            document.getElementById('alert-sukses').classList.add('show');
+            document.getElementById('alert-sukses').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (err) {
+        alert('Gagal kirim, coba lagi!');
+    }
+}
 
   // Cek status pengajuan
-  function cekStatus() {
-    const tiket = document.getElementById('input-tiket').value.trim().toUpperCase();
-    const res   = document.getElementById('status-result');
+  async function cekStatus() {
+    const tiket  = document.getElementById('input-tiket').value.trim().toUpperCase();
+    const res    = document.getElementById('status-result');
     const nodata = document.getElementById('no-data');
-    const data  = localStorage.getItem(tiket);
 
     res.classList.remove('show');
     nodata.style.display = 'none';
 
-    if (!data) { nodata.style.display = 'block'; return; }
-    const obj = JSON.parse(data);
+    try {
+        const response = await fetch(`/api/surat/status/${tiket}`);
+        const data = await response.json();
 
-    document.getElementById('res-jenis').textContent = obj.jenis + ' — ' + obj.nama;
+        if (!response.ok) {
+            nodata.style.display = 'block';
+            return;
+        }
 
-    const steps = [
-      { label: 'Pengajuan Diterima',  sub: obj.tgl,    status: 'done'   },
-      { label: 'Sedang Diverifikasi', sub: 'Petugas kelurahan', status: 'active' },
-      { label: 'Ditandatangani',      sub: 'Menunggu', status: ''       },
-      { label: 'Surat Siap Diambil',  sub: 'Menunggu', status: ''       },
-    ];
+        document.getElementById('res-jenis').textContent = data.jenis + ' — ' + data.nama;
 
-    const container = document.getElementById('status-steps');
-    container.innerHTML = '';
-    steps.forEach((s, i) => {
-      const isLast = i === steps.length - 1;
-      container.innerHTML += `
-        <div class="step">
-          <div class="step-line">
-            <div class="step-dot ${s.status}"></div>
-            ${!isLast ? `<div class="step-connector ${s.status === 'done' ? 'done' : ''}"></div>` : ''}
-          </div>
-          <div class="step-info" style="padding-bottom: ${isLast ? 0 : '1rem'}">
-            <h4>${s.label}</h4>
-            <p>${s.sub}</p>
-          </div>
-        </div>`;
-    });
-    res.classList.add('show');
-  }
+        const steps = [
+            { label: 'Pengajuan Diterima',  sub: data.tgl,   status: 'done'   },
+            { label: 'Sedang Diverifikasi', sub: 'Petugas kelurahan', status: data.status === 'Diproses' ? 'active' : data.status === 'Diterima' ? 'active' : 'done' },
+            { label: 'Ditandatangani',      sub: 'Menunggu', status: data.status === 'Selesai' ? 'done' : '' },
+            { label: 'Surat Siap Diambil',  sub: 'Menunggu', status: data.status === 'Selesai' ? 'done' : '' },
+        ];
+
+        const container = document.getElementById('status-steps');
+        container.innerHTML = '';
+        steps.forEach((s, i) => {
+            const isLast = i === steps.length - 1;
+            container.innerHTML += `
+                <div class="step">
+                    <div class="step-line">
+                        <div class="step-dot ${s.status}"></div>
+                        ${!isLast ? `<div class="step-connector ${s.status === 'done' ? 'done' : ''}"></div>` : ''}
+                    </div>
+                    <div class="step-info" style="padding-bottom: ${isLast ? 0 : '1rem'}">
+                        <h4>${s.label}</h4>
+                        <p>${s.sub}</p>
+                    </div>
+                </div>`;
+        });
+        res.classList.add('show');
+
+    } catch (err) {
+        nodata.style.display = 'block';
+    }
+}
 </script>
 </body>
 </html>
