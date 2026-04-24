@@ -1,49 +1,39 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models.pengaduan import Pengaduan
-from app.utils.s3_helper import upload_file
-from datetime import datetime
-import random, string
+import pymysql
+import os
+import uuid
+from ..utils.s3_helper import upload_to_s3
 
-pengaduan_bp = Blueprint('pengaduan', __name__)
+bp = Blueprint('pengaduan', __name__)
 
-def generate_tiket():
-    tahun = datetime.now().year
-    kode = ''.join(random.choices(string.digits, k=5))
-    return f"PDU-{tahun}-{kode}"
-
-@pengaduan_bp.route('/', methods=['POST'])
-def kirim_pengaduan():
-    nama  = request.form.get('nama')
-    no_hp = request.form.get('no_hp')
-    isi   = request.form.get('isi')
-
-    if not nama or not isi:
-        return jsonify({'error': 'Nama dan isi wajib diisi'}), 400
-
-    foto_url = None
-    if 'foto' in request.files:
-        f = request.files['foto']
-        if f.filename:
-            foto_url = upload_file(f, folder='pengaduan')
-
-    pgd = Pengaduan(
-        tiket=generate_tiket(),
-        nama=nama, no_hp=no_hp,
-        isi=isi, foto_url=foto_url
+def get_db_connection():
+    return pymysql.connect(
+        host=os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'), database=os.getenv('DB_NAME'),
+        cursorclass=pymysql.cursors.DictCursor
     )
-    db.session.add(pgd)
-    db.session.commit()
 
-    return jsonify({'message': 'Pengaduan terkirim', 'tiket': pgd.tiket}), 201
+@bp.route('/submit', methods=['POST'])
+def submit_pengaduan():
+    laporan = request.form.get('laporan')
+    file = request.files.get('foto_bukti')
 
-@pengaduan_bp.route('/all', methods=['GET'])
-def get_all():
-    semua = Pengaduan.query.order_by(Pengaduan.created_at.desc()).all()
-    return jsonify([{
-        'tiket' : p.tiket,
-        'nama'  : p.nama,
-        'isi'   : p.isi[:80],
-        'status': p.status,
-        'tgl'   : p.created_at.strftime('%d %b %Y')
-    } for p in semua])
+    if not laporan or not file:
+        return jsonify({"error": "Data tidak lengkap"}), 400
+
+    file_url = upload_to_s3(file)
+    if not file_url:
+        return jsonify({"error": "Gagal upload ke S3"}), 500
+
+    tiket = f"PGD-{uuid.uuid4().hex[:6].upper()}"
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            sql = "INSERT INTO laporan_pengaduan (laporan, foto_url, status, tiket) VALUES (%s, %s, %s, %s)"
+            cursor.execute(sql, (laporan, file_url, "Sedang Diproses", tiket))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return jsonify({"message": "Berhasil", "tiket": tiket, "foto_url": file_url})

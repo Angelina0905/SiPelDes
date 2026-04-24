@@ -1,334 +1,36 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SiPelDes - Sistem Pelayanan Desa</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --hijau: #1a7a4a;
-    --hijau-muda: #e8f5ee;
-    --hijau-mid: #2e9e62;
-    --kuning: #f5a623;
-    --teks: #1a1a1a;
-    --teks2: #555;
-    --border: #e0e0e0;
-    --bg: #f7f9f7;
-    --putih: #ffffff;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--teks); }
-
-  /* NAVBAR */
-  nav {
-    background: var(--putih);
-    border-bottom: 1px solid var(--border);
-    padding: 0 2rem;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 60px; position: sticky; top: 0; z-index: 100;
-  }
-  .nav-brand { font-size: 1.2rem; font-weight: 700; color: var(--hijau); letter-spacing: -0.5px; }
-  .nav-brand span { color: var(--kuning); }
-  .nav-links { display: flex; gap: 1.5rem; }
-  .nav-links a { text-decoration: none; color: var(--teks2); font-size: 0.9rem; font-weight: 500; transition: color .2s; }
-  .nav-links a:hover { color: var(--hijau); }
-  .nav-login { background: var(--hijau); color: #fff !important; padding: 6px 16px; border-radius: 6px; }
-  .nav-login:hover { background: var(--hijau-mid); }
-
-  /* HERO */
-  .hero {
-    background: linear-gradient(135deg, var(--hijau) 0%, var(--hijau-mid) 100%);
-    color: #fff; text-align: center; padding: 4rem 2rem;
-  }
-  .hero h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.75rem; line-height: 1.2; }
-  .hero p { font-size: 1rem; opacity: 0.88; max-width: 500px; margin: 0 auto 2rem; line-height: 1.6; }
-  .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-  .btn { padding: 10px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; transition: all .2s; text-decoration: none; display: inline-block; }
-  .btn-putih { background: #fff; color: var(--hijau); }
-  .btn-putih:hover { background: var(--hijau-muda); }
-  .btn-outline { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.6); }
-  .btn-outline:hover { background: rgba(255,255,255,0.15); }
-
-  /* LAYANAN CARDS */
-  .section { padding: 3rem 2rem; max-width: 1000px; margin: 0 auto; }
-  .section-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--teks); }
-  .section-sub { color: var(--teks2); font-size: 0.9rem; margin-bottom: 2rem; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-  .card {
-    background: var(--putih); border: 1px solid var(--border);
-    border-radius: 12px; padding: 1.4rem;
-    transition: box-shadow .2s, transform .2s; cursor: pointer;
-  }
-  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
-  .card-icon { font-size: 2rem; margin-bottom: 0.75rem; }
-  .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; }
-  .card p { font-size: 0.85rem; color: var(--teks2); line-height: 1.5; }
-  .card-badge {
-    display: inline-block; margin-top: 0.75rem;
-    font-size: 0.75rem; font-weight: 600; padding: 3px 10px;
-    border-radius: 20px; background: var(--hijau-muda); color: var(--hijau);
-  }
-
-  /* FORM PENGAJUAN */
-  .form-box {
-    background: var(--putih); border: 1px solid var(--border);
-    border-radius: 12px; padding: 2rem;
-  }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .form-group { display: flex; flex-direction: column; margin-bottom: 1rem; }
-  .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--teks); }
-  .form-group input, .form-group select, .form-group textarea {
-    padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 0.9rem; font-family: inherit; outline: none;
-    transition: border-color .2s;
-  }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--hijau);
-  }
-  .form-group textarea { resize: vertical; min-height: 90px; }
-  .upload-area {
-    border: 2px dashed var(--border); border-radius: 8px;
-    padding: 1.5rem; text-align: center; cursor: pointer;
-    transition: border-color .2s, background .2s;
-  }
-  .upload-area:hover { border-color: var(--hijau); background: var(--hijau-muda); }
-  .upload-area p { font-size: 0.85rem; color: var(--teks2); margin-top: 0.4rem; }
-  .upload-area .icon { font-size: 1.8rem; }
-  .btn-submit {
-    background: var(--hijau); color: #fff; width: 100%;
-    padding: 12px; border-radius: 8px; font-size: 1rem;
-    font-weight: 600; border: none; cursor: pointer;
-    transition: background .2s; margin-top: 0.5rem;
-  }
-  .btn-submit:hover { background: var(--hijau-mid); }
-
-  /* TRACKING */
-  .track-box {
-    background: var(--putih); border: 1px solid var(--border);
-    border-radius: 12px; padding: 2rem;
-  }
-  .track-input { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
-  .track-input input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; font-family: inherit; outline: none; }
-  .track-input input:focus { border-color: var(--hijau); }
-  .btn-cek { background: var(--hijau); color: #fff; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; white-space: nowrap; }
-  .status-result { display: none; }
-  .status-result.show { display: block; }
-  .status-steps { display: flex; flex-direction: column; gap: 0; }
-  .step { display: flex; align-items: flex-start; gap: 1rem; }
-  .step-line { display: flex; flex-direction: column; align-items: center; }
-  .step-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); background: #fff; flex-shrink: 0; margin-top: 3px; }
-  .step-dot.done { background: var(--hijau); border-color: var(--hijau); }
-  .step-dot.active { background: var(--kuning); border-color: var(--kuning); }
-  .step-connector { width: 2px; height: 32px; background: var(--border); }
-  .step-connector.done { background: var(--hijau); }
-  .step-info h4 { font-size: 0.9rem; font-weight: 600; }
-  .step-info p { font-size: 0.8rem; color: var(--teks2); }
-  .no-data { text-align: center; padding: 2rem; color: var(--teks2); font-size: 0.9rem; }
-
-  /* FOOTER */
-  footer {
-    background: var(--hijau); color: rgba(255,255,255,0.85);
-    text-align: center; padding: 1.5rem;
-    font-size: 0.85rem; margin-top: 3rem;
-  }
-
-  /* TABS */
-  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
-  .tab { padding: 10px 20px; cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--teks2); border-bottom: 2px solid transparent; transition: all .2s; }
-  .tab.active { color: var(--hijau); border-bottom-color: var(--hijau); }
-
-  /* ALERT */
-  .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; margin-top: 1rem; display: none; }
-  .alert.show { display: block; }
-  .alert-success { background: var(--hijau-muda); color: var(--hijau); border: 1px solid #a8d5bc; }
-
-  @media (max-width: 600px) {
-    .form-row { grid-template-columns: 1fr; }
-    .hero h1 { font-size: 1.6rem; }
-    nav { padding: 0 1rem; }
-    .nav-links { gap: 1rem; }
-  }
-</style>
+    <title>SiPelDes - Sistem Pelayanan Desa</title>
+    <style> body { font-family: Arial; padding: 20px; } .card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px;} </style>
 </head>
 <body>
+    <h1>Layanan Mandiri Desa</h1>
 
-<!-- NAVBAR -->
-<nav>
-  <div class="nav-brand">Si<span>Pel</span>Des</div>
-  <div class="nav-links">
-    <a href="#layanan">Layanan</a>
-    <a href="#ajukan">Ajukan</a>
-    <a href="#tracking">Tracking</a>
-    <a href="#" class="nav-login">Masuk</a>
-  </div>
-</nav>
-
-<!-- HERO -->
-<div class="hero">
-  <h1>Layanan Administrasi Desa<br>Kini Lebih Mudah</h1>
-  <p>Ajukan surat, lacak status, dan sampaikan pengaduan tanpa harus antri di kantor kelurahan.</p>
-  <div class="hero-btns">
-    <a href="#ajukan" class="btn btn-putih">Ajukan Sekarang</a>
-    <a href="#tracking" class="btn btn-outline">Cek Status</a>
-  </div>
-</div>
-
-<!-- LAYANAN -->
-<div class="section" id="layanan">
-  <div class="section-title">Layanan Tersedia</div>
-  <div class="section-sub">Pilih layanan yang kamu butuhkan</div>
-  <div class="cards">
-    <div class="card" onclick="pilihLayanan('Surat Keterangan Domisili')">
-      <div class="card-icon">🏠</div>
-      <h3>Surat Domisili</h3>
-      <p>Keterangan tempat tinggal untuk keperluan administrasi.</p>
-      <span class="card-badge">1-2 Hari Kerja</span>
-    </div>
-    <div class="card" onclick="pilihLayanan('Surat Keterangan Usaha')">
-      <div class="card-icon">🏪</div>
-      <h3>Surat Usaha</h3>
-      <p>Legalisasi usaha kecil dan menengah di lingkungan desa.</p>
-      <span class="card-badge">2-3 Hari Kerja</span>
-    </div>
-    <div class="card" onclick="pilihLayanan('Surat Keterangan Tidak Mampu')">
-      <div class="card-icon">📄</div>
-      <h3>Surat Tidak Mampu</h3>
-      <p>Untuk keperluan beasiswa, layanan kesehatan, dll.</p>
-      <span class="card-badge">1-2 Hari Kerja</span>
-    </div>
-    <div class="card" onclick="pilihLayanan('Pengaduan Masyarakat')">
-      <div class="card-icon">📢</div>
-      <h3>Pengaduan</h3>
-      <p>Laporkan masalah lingkungan atau fasilitas desa.</p>
-      <span class="card-badge">Respon 1x24 Jam</span>
-    </div>
-  </div>
-</div>
-
-<!-- FORM PENGAJUAN -->
-<div class="section" id="ajukan">
-  <div class="section-title">Form Pengajuan</div>
-  <div class="section-sub">Isi data dengan lengkap dan benar</div>
-  <div class="form-box">
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nama Lengkap</label>
-        <input type="text" id="nama" placeholder="Nama sesuai KTP">
-      </div>
-      <div class="form-group">
-        <label>NIK</label>
-        <input type="text" id="nik" placeholder="16 digit NIK">
-      </div>
+    <div class="card">
+        <h3>1. Pengajuan Surat</h3>
+        <form action="/api/surat/submit" method="POST" enctype="multipart/form-data">
+            Nama: <input type="text" name="nama" required><br><br>
+            Dokumen (PDF/JPG): <input type="file" name="file_dokumen" required><br><br>
+            <button type="submit">Ajukan Surat</button>
+        </form>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>No. HP</label>
-        <input type="tel" id="hp" placeholder="08xxxxxxxxxx">
-      </div>
-      <div class="form-group">
-        <label>Jenis Layanan</label>
-        <select id="jenis">
-          <option value="">-- Pilih Layanan --</option>
-          <option>Surat Keterangan Domisili</option>
-          <option>Surat Keterangan Usaha</option>
-          <option>Surat Keterangan Tidak Mampu</option>
-          <option>Pengaduan Masyarakat</option>
-        </select>
-      </div>
+    <div class="card">
+        <h3>2. Pengaduan Masyarakat</h3>
+        <form action="/api/pengaduan/submit" method="POST" enctype="multipart/form-data">
+            Laporan: <textarea name="laporan" required></textarea><br><br>
+            Foto Bukti: <input type="file" name="foto_bukti" required><br><br>
+            <button type="submit">Kirim Laporan</button>
+        </form>
     </div>
 
-    <div class="form-group">
-      <label>Keperluan / Keterangan</label>
-      <textarea id="keperluan" placeholder="Jelaskan keperluan pengajuan..."></textarea>
+    <div class="card">
+        <h3>3. Cek Status (Tracking)</h3>
+        <form action="/api/tracking/cek" method="GET">
+            Nomor Tiket: <input type="text" name="tiket" required><br><br>
+            <button type="submit">Cek Status</button>
+        </form>
     </div>
-
-    <div class="form-group">
-      <label>Upload Dokumen Pendukung</label>
-      <div class="upload-area" onclick="document.getElementById('file-input').click()">
-        <div class="icon">📎</div>
-        <strong id="file-label" style="font-size:0.9rem">Klik untuk pilih file</strong>
-        <p>Format: JPG, PNG, PDF — Maks 5MB</p>
-        <input type="file" id="file-input" style="display:none"
-          accept=".jpg,.jpeg,.png,.pdf"
-          onchange="gantiFile(this)">
-      </div>
-    </div>
-
-    <button class="btn-submit" onclick="kirimForm()">Kirim Pengajuan</button>
-
-    <!-- ALERT SUKSES -->
-    <div class="alert alert-success" id="alert-sukses">
-      <p>✅ Pengajuan berhasil dikirim!</p>
-      <p>Nomor tiket: <strong id="nomor-tiket"></strong></p>
-      <p>File berhasil tersimpan di cloud storage.</p>
-      <p>
-        Bukti file:
-        <a id="file-link" href="#" target="_blank">Lihat File Upload</a>
-      </p>
-    </div>
-  </div>
-</div>
-
-<script>
-  function pilihLayanan(nama) {
-    document.getElementById('jenis').value = nama;
-    document.getElementById('ajukan').scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function gantiFile(input) {
-    const label = document.getElementById('file-label');
-    if (input.files.length > 0) {
-      label.textContent = '✅ ' + input.files[0].name;
-    }
-  }
-
-  async function kirimForm() {
-    const nama = document.getElementById('nama').value.trim();
-    const nik = document.getElementById('nik').value.trim();
-    const no_hp = document.getElementById('hp').value.trim();
-    const jenis = document.getElementById('jenis').value;
-    const keperluan = document.getElementById('keperluan').value.trim();
-    const file = document.getElementById('file-input').files[0];
-
-    if (!nama || !nik || !jenis || !file) {
-      alert('Lengkapi semua data dan upload file terlebih dahulu.');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('nama', nama);
-    formData.append('nik', nik);
-    formData.append('no_hp', no_hp);
-    formData.append('jenis', jenis);
-    formData.append('keperluan', keperluan);
-    formData.append('file', file);
-
-    try {
-      const res = await fetch('/api/surat/', {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        document.getElementById('nomor-tiket').textContent = data.tiket;
-
-        // tampilkan link file dari S3
-        document.getElementById('file-link').href = data.file_url;
-
-        document.getElementById('alert-sukses').classList.add('show');
-        document.getElementById('alert-sukses').scrollIntoView({
-          behavior: 'smooth'
-        });
-      } else {
-        alert('Upload gagal: ' + data.error);
-      }
-
-    } catch (err) {
-      alert('Terjadi kesalahan saat upload file');
-    }
-  }
-</script>
+</body>
+</html>

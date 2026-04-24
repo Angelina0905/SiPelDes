@@ -3,33 +3,22 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-2")
-BUCKET = os.getenv("S3_BUCKET", "sipeldes-bucket")
-
-s3 = boto3.client(
-    "s3",
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name=AWS_REGION
-)
-
-def upload_file(file_obj, folder="surat"):
+def upload_to_s3(file):
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+        region_name=os.getenv('AWS_REGION')
+    )
+    bucket_name = os.getenv('S3_BUCKET')
+    
+    filename = secure_filename(file.filename)
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    
     try:
-        filename = f"{folder}/{uuid.uuid4()}_{secure_filename(file_obj.filename)}"
-
-        s3.upload_fileobj(
-            file_obj,
-            BUCKET,
-            filename
-        )
-
-        file_url = f"https://{BUCKET}.s3.{AWS_REGION}.amazonaws.com/{filename}"
-
-        print("Upload berhasil:", file_url)
+        s3_client.upload_fileobj(file, bucket_name, unique_filename, ExtraArgs={"ContentType": file.content_type})
+        file_url = f"https://{bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{unique_filename}"
         return file_url
-
     except Exception as e:
-        print("Upload gagal:", str(e))
+        print("S3 Upload Error:", e)
         return None

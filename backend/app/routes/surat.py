@@ -1,35 +1,39 @@
 from flask import Blueprint, request, jsonify
-from app.utils.s3_helper import upload_file
+import pymysql
+import os
+import uuid
+from ..utils.s3_helper import upload_to_s3
 
-surat_bp = Blueprint("surat", __name__)
+bp = Blueprint('surat', __name__)
 
-@surat_bp.route("/", methods=["POST"])
-def create_surat():
+def get_db_connection():
+    return pymysql.connect(
+        host=os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'), database=os.getenv('DB_NAME'),
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+@bp.route('/submit', methods=['POST'])
+def submit_surat():
+    nama = request.form.get('nama')
+    file = request.files.get('file_dokumen')
+
+    if not nama or not file:
+        return jsonify({"error": "Data tidak lengkap"}), 400
+
+    file_url = upload_to_s3(file)
+    if not file_url:
+        return jsonify({"error": "Gagal upload ke S3"}), 500
+
+    tiket = f"SRT-{uuid.uuid4().hex[:6].upper()}"
+    
+    conn = get_db_connection()
     try:
-        nama = request.form.get("nama")
-        nik = request.form.get("nik")
-        no_hp = request.form.get("no_hp")
-        jenis = request.form.get("jenis")
-        keperluan = request.form.get("keperluan")
+        with conn.cursor() as cursor:
+            sql = "INSERT INTO pengajuan_surat (nama, file_url, status, tiket) VALUES (%s, %s, %s, %s)"
+            cursor.execute(sql, (nama, file_url, "Menunggu Verifikasi", tiket))
+        conn.commit()
+    finally:
+        conn.close()
 
-        file = request.files.get("file")
-        file_url = None
-
-        if file:
-            file_url = upload_file(file, folder="surat")
-
-            if not file_url:
-                return jsonify({
-                    "error": "Upload file ke S3 gagal"
-                }), 500
-
-        tiket = "SPD-2026-001"
-
-        return jsonify({
-            "message": "Pengajuan berhasil",
-            "tiket": tiket,
-            "file_url": file_url
-        }), 201
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"message": "Berhasil", "tiket": tiket, "file_url": file_url})
