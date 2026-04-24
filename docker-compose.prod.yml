@@ -11,7 +11,7 @@ services:
       - DB_HOST=sipeldes-db.c9o4c8y28izt.ap-southeast-2.rds.amazonaws.com
       - DB_USER=admin
       - DB_PASSWORD=Angelina_077
-      - DB_NAME=sipeldes-db
+      - DB_NAME=sipeldes_db
     command: gunicorn --bind 0.0.0.0:5000 app:app
 
   frontend:
