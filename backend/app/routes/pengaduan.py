@@ -4,7 +4,7 @@ import os
 import uuid
 from ..utils.s3_helper import upload_to_s3
 
-bp = Blueprint('pengaduan', __name__)
+pengaduan_bp = Blueprint('pengaduan', __name__)
 
 def get_db_connection():
     return pymysql.connect(
@@ -13,7 +13,7 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-@bp.route('/submit', methods=['POST'])
+@pengaduan_bp.route('/submit', methods=['POST'])
 def submit_pengaduan():
     laporan = request.form.get('laporan')
     file = request.files.get('foto_bukti')

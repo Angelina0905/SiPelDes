@@ -4,7 +4,7 @@ import os
 import uuid
 from ..utils.s3_helper import upload_to_s3
 
-bp = Blueprint('surat', __name__)
+surat_bp = Blueprint('surat', __name__)
 
 def get_db_connection():
     return pymysql.connect(
@@ -13,7 +13,7 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-@bp.route('/submit', methods=['POST'])
+@surat_bp.route('/submit', methods=['POST'])
 def submit_surat():
     nama = request.form.get('nama')
     file = request.files.get('file_dokumen')

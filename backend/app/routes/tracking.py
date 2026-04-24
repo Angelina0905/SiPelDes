@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import pymysql
 import os
 
-bp = Blueprint('tracking', __name__)
+tracking_bp = Blueprint('tracking', __name__)
 
 def get_db_connection():
     return pymysql.connect(
@@ -11,7 +11,7 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-@bp.route('/cek', methods=['GET'])
+@tracking_bp.route('/cek', methods=['GET'])
 def cek_status():
     tiket = request.args.get('tiket')
     if not tiket:
