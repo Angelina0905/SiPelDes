@@ -258,6 +258,25 @@
 
     <button class="btn-submit" onclick="kirimForm()">Kirim Pengajuan</button>
 
+    <!-- TRACKING -->
+  <div class="section" id="tracking">
+    <div class="section-title">Cek Status Pengajuan</div>
+    <div class="track-box">
+      <div class="track-input">
+        <input type="text" id="cari-tiket" placeholder="Masukkan nomor tiket">
+        <button class="btn-cek" onclick="cekTiket()">Cek</button>
+      </div>
+      <div id="hasil-tracking"></div>
+    </div>
+  </div>
+
+  <!-- DATA LAPORAN -->
+  <div class="section" id="data-laporan">
+    <div class="section-title">Daftar Laporan</div>
+    <div class="section-sub">Semua laporan yang telah masuk</div>
+    <div id="laporan-list"></div>
+  </div>
+
     <!-- ALERT SUKSES -->
     <div class="alert alert-success" id="alert-sukses">
       <p>✅ Pengajuan berhasil dikirim!</p>
@@ -284,6 +303,9 @@
     }
   }
 
+  // =========================
+  // CREATE
+  // =========================
   async function kirimForm() {
     const keperluan = document.getElementById('keperluan').value.trim();
     const file = document.getElementById('file-input').files[0];
@@ -308,8 +330,9 @@
       if (res.ok) {
         document.getElementById('nomor-tiket').textContent = data.tiket;
         document.getElementById('file-link').href = data.foto_url;
-
         document.getElementById('alert-sukses').classList.add('show');
+
+        loadLaporan();
       } else {
         alert('Gagal: ' + data.error);
       }
@@ -318,4 +341,117 @@
       alert('Server tidak bisa diakses ❌');
     }
   }
+
+  // =========================
+  // READ ALL
+  // =========================
+  async function loadLaporan() {
+    try {
+      const res = await fetch('/laporan');
+      const data = await res.json();
+
+      const list = document.getElementById('laporan-list');
+      list.innerHTML = '';
+
+      if (data.length === 0) {
+        list.innerHTML = '<p>Belum ada laporan.</p>';
+        return;
+      }
+
+      data.forEach(item => {
+        list.innerHTML += `
+          <div class="card" style="margin-bottom:1rem;">
+            <h3>${item.tiket}</h3>
+            <p>${item.laporan}</p>
+            <p>Status: <strong>${item.status}</strong></p>
+            <button class="btn btn-putih" onclick="updateStatus(${item.id})">Update</button>
+            <button class="btn btn-outline" onclick="hapusData(${item.id})">Hapus</button>
+          </div>
+        `;
+      });
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // =========================
+  // READ BY TIKET
+  // =========================
+  async function cekTiket() {
+    const tiket = document.getElementById('cari-tiket').value.trim();
+    const hasil = document.getElementById('hasil-tracking');
+
+    if (!tiket) {
+      hasil.innerHTML = '<p>Masukkan nomor tiket.</p>';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/laporan/${tiket}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        hasil.innerHTML = `<p>${data.error}</p>`;
+        return;
+      }
+
+      hasil.innerHTML = `
+        <div class="card">
+          <h3>${data.tiket}</h3>
+          <p>${data.laporan}</p>
+          <p>Status: <strong>${data.status}</strong></p>
+        </div>
+      `;
+
+    } catch (err) {
+      hasil.innerHTML = '<p>Gagal mengambil data.</p>';
+    }
+  }
+
+  // =========================
+  // UPDATE
+  // =========================
+  async function updateStatus(id) {
+    const statusBaru = prompt("Masukkan status baru:");
+
+    if (!statusBaru) return;
+
+    try {
+      await fetch(`/laporan/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: statusBaru })
+      });
+
+      loadLaporan();
+
+    } catch (err) {
+      alert('Gagal update status');
+    }
+  }
+
+  // =========================
+  // DELETE
+  // =========================
+  async function hapusData(id) {
+    const yakin = confirm("Yakin ingin menghapus laporan?");
+    if (!yakin) return;
+
+    try {
+      await fetch(`/laporan/${id}`, {
+        method: 'DELETE'
+      });
+
+      loadLaporan();
+
+    } catch (err) {
+      alert('Gagal hapus data');
+    }
+  }
+
+  // auto load
+  loadLaporan();
 </script>
