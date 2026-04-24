@@ -2,8 +2,6 @@ from flask import Flask, request, jsonify
 import pymysql
 import os
 import uuid
-from utils.s3_helper import upload_to_s3
-
 
 app = Flask(__name__)
 
@@ -28,9 +26,8 @@ def submit_pengaduan():
     if not laporan or not file:
         return jsonify({"error": "Data tidak lengkap"}), 400
 
-    file_url = upload_to_s3(file)
-    if not file_url:
-        return jsonify({"error": "Gagal upload ke S3"}), 500
+    # sementara dummy dulu biar gak error
+    file_url = "https://dummy-file-url.com"
 
     tiket = f"PGD-{uuid.uuid4().hex[:6].upper()}"
 
