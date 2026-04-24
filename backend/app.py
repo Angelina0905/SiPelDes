@@ -55,7 +55,7 @@ def submit_pengaduan():
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
-    file_url = f"http://54.66.170.224:5000/uploads/{filename}"
+    file_url = f"http://54.66.170.224/uploads/{filename}"
     tiket = f"PGD-{uuid.uuid4().hex[:6].upper()}"
 
     data = load_data()
