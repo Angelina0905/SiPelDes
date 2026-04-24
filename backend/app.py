@@ -4,7 +4,12 @@ import os
 import uuid
 from utils.s3_helper import upload_to_s3
 
+
 app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Backend jalan 🚀"
 
 def get_db_connection():
     return pymysql.connect(
