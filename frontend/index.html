@@ -378,80 +378,105 @@
   // =========================
   // READ BY TIKET
   // =========================
-  async function cekTiket() {
-    const tiket = document.getElementById('cari-tiket').value.trim();
-    const hasil = document.getElementById('hasil-tracking');
+async function cekTiket() {
+  const tiket = document.getElementById('cari-tiket').value.trim();
+  const hasil = document.getElementById('hasil-tracking');
 
-    if (!tiket) {
-      hasil.innerHTML = '<p>Masukkan nomor tiket.</p>';
+  if (!tiket) {
+    hasil.innerHTML = '<p>Masukkan nomor tiket.</p>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/laporan/${tiket}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      hasil.innerHTML = `<p>${data.error}</p>`;
       return;
     }
 
-    try {
-      const res = await fetch(`/laporan/${tiket}`);
-      const data = await res.json();
+    let tombolAksi = '';
 
-      if (!res.ok) {
-        hasil.innerHTML = `<p>${data.error}</p>`;
-        return;
-      }
-
-      hasil.innerHTML = `
-        <div class="card">
-          <h3>${data.tiket}</h3>
-          <p>${data.laporan}</p>
-          <p>Status: <strong>${data.status}</strong></p>
-        </div>
+    if (data.status === "Sedang Diproses") {
+      tombolAksi = `
+        <button class="btn btn-putih" onclick="editPengajuan(${data.id}, '${data.laporan}')">Edit Pengajuan</button>
+        <button class="btn btn-outline" onclick="hapusPengajuan(${data.id})">Batalkan Pengajuan</button>
       `;
-
-    } catch (err) {
-      hasil.innerHTML = '<p>Gagal mengambil data.</p>';
     }
+
+    hasil.innerHTML = `
+      <div class="card">
+        <h3>${data.tiket}</h3>
+        <p>${data.laporan}</p>
+        <p>Status: <strong>${data.status}</strong></p>
+        ${tombolAksi}
+      </div>
+    `;
+
+  } catch (err) {
+    hasil.innerHTML = '<p>Gagal mengambil data.</p>';
   }
+}
 
   // =========================
   // UPDATE
   // =========================
-  async function updateStatus(id) {
-    const statusBaru = prompt("Masukkan status baru:");
+  async function editPengajuan(id, laporanLama) {
+  const laporanBaru = prompt("Edit pengajuan:", laporanLama);
 
-    if (!statusBaru) return;
+  if (!laporanBaru) return;
 
-    try {
-      await fetch(`/laporan/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: statusBaru })
-      });
+  try {
+    const res = await fetch(`/laporan/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        laporan: laporanBaru
+      })
+    });
 
-      loadLaporan();
+    const data = await res.json();
 
-    } catch (err) {
-      alert('Gagal update status');
+    if (!res.ok) {
+      alert(data.error);
+      return;
     }
+
+    alert("Pengajuan berhasil diupdate");
+    cekTiket();
+
+  } catch (err) {
+    alert("Gagal update pengajuan");
   }
+}
 
   // =========================
   // DELETE
   // =========================
-  async function hapusData(id) {
-    const yakin = confirm("Yakin ingin menghapus laporan?");
-    if (!yakin) return;
+  async function hapusPengajuan(id) {
+  const yakin = confirm("Yakin ingin membatalkan pengajuan?");
+  if (!yakin) return;
 
-    try {
-      await fetch(`/laporan/${id}`, {
-        method: 'DELETE'
-      });
+  try {
+    const res = await fetch(`/laporan/${id}`, {
+      method: 'DELETE'
+    });
 
-      loadLaporan();
+    const data = await res.json();
 
-    } catch (err) {
-      alert('Gagal hapus data');
+    if (!res.ok) {
+      alert(data.error);
+      return;
     }
-  }
 
-  // auto load
-  loadLaporan();
+    alert("Pengajuan berhasil dibatalkan");
+    document.getElementById('hasil-tracking').innerHTML = '';
+
+  } catch (err) {
+    alert("Gagal menghapus pengajuan");
+  }
+}
 </script>

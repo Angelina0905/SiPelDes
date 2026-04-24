@@ -98,9 +98,7 @@ def get_by_tiket(tiket):
 
     return jsonify({"error": "Tiket tidak ditemukan"}), 404
 
-# =========================
-# UPDATE
-# =========================
+# UPDATE PENGAJUAN
 @app.route('/laporan/<int:id>', methods=['PUT'])
 def update_data(id):
     data = load_data()
@@ -108,27 +106,40 @@ def update_data(id):
 
     for item in data:
         if item["id"] == id:
-            item["status"] = body.get("status", item["status"])
+
+            # hanya boleh update jika belum selesai
+            if item["status"] != "Sedang Diproses":
+                return jsonify({"error": "Pengajuan tidak bisa diubah"}), 400
+
+            # update isi laporan
+            item["laporan"] = body.get("laporan", item["laporan"])
+
             save_data(data)
-            return jsonify({"message": "Berhasil diupdate"})
+
+            return jsonify({
+                "message": "Pengajuan berhasil diupdate",
+                "data": item
+            })
 
     return jsonify({"error": "Data tidak ditemukan"}), 404
-
-# =========================
-# DELETE
-# =========================
+# DELETE PENGAJUAN
 @app.route('/laporan/<int:id>', methods=['DELETE'])
 def delete_data(id):
     data = load_data()
 
-    new_data = [item for item in data if item["id"] != id]
+    for item in data:
+        if item["id"] == id:
 
-    if len(new_data) == len(data):
-        return jsonify({"error": "Data tidak ditemukan"}), 404
+            # hanya boleh hapus jika belum selesai
+            if item["status"] != "Sedang Diproses":
+                return jsonify({"error": "Pengajuan tidak bisa dihapus"}), 400
 
-    save_data(new_data)
-    return jsonify({"message": "Berhasil dihapus"})
+            data.remove(item)
+            save_data(data)
 
+            return jsonify({"message": "Pengajuan berhasil dihapus"})
+
+    return jsonify({"error": "Data tidak ditemukan"}), 404
 # =========================
 # RUN
 # =========================
