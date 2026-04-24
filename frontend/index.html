@@ -304,7 +304,7 @@
     formData.append('foto_bukti', file);
 
     try {
-      const res = await fetch('http://<IP-EC2>:5000/submit', {
+      const res = await fetch('http://http://54.66.170.224/:5000/submit', {
         method: 'POST',
         body: formData
       });
